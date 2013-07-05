@@ -11,6 +11,7 @@ TODO:
 Example usage:
 - Copy the packages directly into your Android project
 
+```java
 // create a new instance of a model class and populate it. The class represents
 // a row in the "Message" database table
 MessageModel messageModel = new MessageModel();
@@ -32,3 +33,4 @@ MessageModel[] messageArray = sqlProvider.selectAll(MessageModel.class, messageM
 		
 // close the SQLite database connection
 sqlProvider.close();
+```
