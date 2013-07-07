@@ -155,13 +155,14 @@ public class ReflectionHelper {
 	
 	/**
 	 * invoke reflection method
+	 * @param <T>
 	 * @param	object	The object to invoke the method on
 	 * @param	method	The method to invoke
-	 * @param	stringValue	The value to pass into the method
+	 * @param	value	The value to pass into the method
 	 */
-	public static void invokeMethod(Object object, Method method,String stringValue) {
+	public static <T> void invokeMethod(Object object, Method method, T value) {
 		try {
-			method.invoke(object, stringValue);
+			method.invoke(object, value);
 		} catch (IllegalArgumentException e) {
 		} catch (IllegalAccessException e) {
 		} catch (InvocationTargetException e) {

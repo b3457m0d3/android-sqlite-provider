@@ -1,6 +1,10 @@
 package com.memtrip.application.sql;
 
 
+import java.io.Closeable;
+
+import com.memtrip.application.utils.ReflectionHelper;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -10,7 +14,7 @@ import android.database.sqlite.SQLiteDatabase;
  * of generic methods
  * @author	memtrip
  */
-public class SQLProvider {
+public class SQLProvider implements Closeable {
 	private SQLiteDatabase database;
 	private SQLDatabaseHelper sqlDatabaseHelper;
 	
@@ -73,7 +77,7 @@ public class SQLProvider {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, baseSQLModel, cursor);
 		return (T[])result;
 	}
 	
@@ -92,16 +96,16 @@ public class SQLProvider {
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
 		
 		Cursor cursor = database.query(tableName, 
-				columns, 
-				whereClause, 
-				conditions, 
-				null, 
-				null, 
-				order, 
-				limit
-			);
+			columns, 
+			whereClause, 
+			conditions, 
+			null, 
+			null, 
+			order, 
+			limit
+		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, baseSQLModel, cursor);
 		return (T[])result;
 	}
 	
