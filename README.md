@@ -29,7 +29,7 @@ sqlProvider.open();
 long id = sqlProvider.insert(MessageModel.class, messageModel);
 		
 // select all from Message table as a MessageModel[] array
-MessageModel[] messageArray = sqlProvider.selectAll(MessageModel.class, messageModel, null, null);
+MessageModel[] messageArray = sqlProvider.selectAll(MessageModel.class, new MessageModel(), null, null);
 		
 // close the SQLite database connection
 sqlProvider.close();
