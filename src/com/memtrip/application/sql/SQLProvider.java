@@ -91,7 +91,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, baseSQLModel, cursor);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
 		return (T[])result;
 	}
 	
@@ -119,7 +119,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, baseSQLModel, cursor);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
 		return (T[])result;
 	}
 	
