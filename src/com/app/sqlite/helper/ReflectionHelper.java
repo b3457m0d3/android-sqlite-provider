@@ -1,4 +1,4 @@
-package com.memtrip.application.sql;
+package com.app.sqlite.helper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

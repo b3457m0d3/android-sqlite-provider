@@ -1,4 +1,4 @@
-package com.memtrip.application.sql;
+package com.app.sqlite.base;
 
 import java.util.HashMap;
 
@@ -8,7 +8,7 @@ import android.content.ContentValues;
  * The base class of all SQL models
  * @author	memtrip
  */
-public abstract class BaseSQLModel {
+public abstract class BaseModel {
 	/**
 	 * @return	the name of the SQL table this map will be saved to
 	 */

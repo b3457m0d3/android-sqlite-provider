@@ -1,6 +1,10 @@
-package com.memtrip.application.sql;
+package com.app.sqlite;
 
 import java.io.Closeable;
+
+import com.app.sqlite.base.BaseModel;
+import com.app.sqlite.helper.ReflectionHelper;
+import com.app.sqlite.helper.SQLDatabaseHelper;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -41,25 +45,25 @@ public class SQLProvider implements Closeable {
 	
 	/**
 	 * Insert a baseSQLModel into the table that relates to the baseSQLModel type
-	 * @param	baseSQLModel	The object being inserted into the SQLite table
+	 * @param	baseModel	The object being inserted into the SQLite table
 	 * @return	The unique id of the created row
 	 */
-	public long insert(BaseSQLModel baseSQLModel) {
-		String tableName = ReflectionHelper.getStaticStringField(baseSQLModel.getClass(), FIELD_TABLE_NAME);
-		return database.insertOrThrow(tableName, baseSQLModel.getNullColumnHack(), baseSQLModel.toContentValues());
+	public long insert(BaseModel baseModel) {
+		String tableName = ReflectionHelper.getStaticStringField(baseModel.getClass(), FIELD_TABLE_NAME);
+		return database.insertOrThrow(tableName, baseModel.getNullColumnHack(), baseModel.toContentValues());
 	}
 	
 	/**
 	 * Insert an array of baseSQLModel into the table that relates to the array database
-	 * @param	baseSQLModelArray	The array of objects being inserted into the SQLite table
+	 * @param	baseModelArray	The array of objects being inserted into the SQLite table
 	 * @return	The unique ids of the created rows
 	 */
-	public long[] insertArray(BaseSQLModel[] baseSQLModelArray) {
-		if (baseSQLModelArray != null && baseSQLModelArray.length > 0) {
-			long[] respnseIds = new long[baseSQLModelArray.length];
+	public long[] insertArray(BaseModel[] baseModelArray) {
+		if (baseModelArray != null && baseModelArray.length > 0) {
+			long[] respnseIds = new long[baseModelArray.length];
 			
-			for (int i = 0; i < baseSQLModelArray.length; i++) {
-				respnseIds[i] = this.insert(baseSQLModelArray[i]);
+			for (int i = 0; i < baseModelArray.length; i++) {
+				respnseIds[i] = this.insert(baseModelArray[i]);
 			}
 			
 			return respnseIds;
@@ -72,13 +76,13 @@ public class SQLProvider implements Closeable {
 	 * Selects all baseSQLModel elements from the provided class, it requires a baseSQLModel
 	 * instance to retrieve the columns that should be populated 
 	 * @param	c	The baseSQLModel class that is being selected from the database
-	 * @param	baseSQLModel	An instance of the baseSQLModel class that is being selected from the database
+	 * @param	baseModel	An instance of the baseSQLModel class that is being selected from the database
 	 * @param	order	The order results should be returned (ASC or DESC)
 	 * @param	limit	How many results should be returned
 	 * @return	An array of BaseSQLModel results
 	 */
-	public <T> T[] selectAll(Class<T> c, BaseSQLModel baseSQLModel, String order, String limit) {
-		String[] columns = baseSQLModel.getModelColumns();
+	public <T> T[] selectAll(Class<T> c, BaseModel baseModel, String order, String limit) {
+		String[] columns = baseModel.getModelColumns();
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
 		
 		Cursor cursor = database.query(tableName, 
@@ -91,22 +95,22 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
 	}
 	
 	/**
 	 * Selects baseSQLModel elements that match the provided whereClause and conditions
 	 * @param	c	The baseSQLModel class that is being selected from the database
-	 * @param	baseSQLModel	An instance of the baseSQLModel class that is being selected from the database
+	 * @param	baseModel	An instance of the baseSQLModel class that is being selected from the database
 	 * @param	whereClause	The where clause that should be applied to the database query
 	 * @param	conditions	The conditions of the where clause
 	 * @param	order	The order results should be returned (ASC or DESC)
 	 * @param	limit	How many results should be returned
 	 * @return	An array of BaseSQLModel results
 	 */
-	public <T> T[] selectByWhereClause(Class<T> c, BaseSQLModel baseSQLModel, String whereClause, String[] conditions, String order, String limit) {
-		String[] columns = baseSQLModel.getModelColumns();
+	public <T> T[] selectByWhereClause(Class<T> c, BaseModel baseModel, String whereClause, String[] conditions, String order, String limit) {
+		String[] columns = baseModel.getModelColumns();
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
 		
 		Cursor cursor = database.query(tableName, 
@@ -119,7 +123,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseSQLModel);
+		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
 	}
 	
