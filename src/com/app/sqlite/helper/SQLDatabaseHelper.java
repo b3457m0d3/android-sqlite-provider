@@ -11,7 +11,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 
 /**
  * A SQLite database helper class that handles the creation and updating of 
@@ -103,14 +102,8 @@ public class SQLDatabaseHelper extends SQLiteOpenHelper {
 	 * @param	index	The cursor index that the desired value is positioned at
 	 */
 	private static void setColumnValue(Object baseSQLModel, HashMap<String,Integer> columnTypeMap, Method executeMethod, Cursor cursor, int index) {
-		int columnType = -1;
-		
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-			columnType = cursor.getType(index);
-		} else {
-			columnType = columnTypeMap.get(cursor.getColumnName(index));
-		}
-	
+		int columnType = columnTypeMap.get(cursor.getColumnName(index));
+
 		switch (columnType) {
 			case BaseModel.FIELD_STRING:
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getString(index));
