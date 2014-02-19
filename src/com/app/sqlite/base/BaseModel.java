@@ -9,6 +9,12 @@ import android.content.ContentValues;
  * @author	memtrip
  */
 public abstract class BaseModel {
+	public static final int FIELD_STRING = 0;
+	public static final int FIELD_INTEGER = 1;
+	public static final int FIELD_LONG = 2;
+	public static final int FIELD_FLOAT = 3;
+	public static final int FIELD_BLOB = 4;
+	
 	/**
 	 * @return	the name of the SQL table this map will be saved to
 	 */

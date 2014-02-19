@@ -3,9 +3,7 @@ package com.app.sqlite.helper;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * A helper class for all common reflection code

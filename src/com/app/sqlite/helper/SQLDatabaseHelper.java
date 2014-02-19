@@ -92,7 +92,7 @@ public class SQLDatabaseHelper extends SQLiteOpenHelper {
 
 
 	/**
-	 * Use reflection to access the setter methods of the baseSQLModel instance, then set
+	 * Use reflection to access the setter methods of the baseModel instance, then set
 	 * the value of whatever type is associated with the current cursorColumn. The method
 	 * cursor.getType(int) is only available in API 11+, so to determine the type, each table column
 	 * has a key value pair comprising of columnName/dataType
@@ -112,19 +112,23 @@ public class SQLDatabaseHelper extends SQLiteOpenHelper {
 		}
 	
 		switch (columnType) {
-			case Cursor.FIELD_TYPE_STRING:
+			case BaseModel.FIELD_STRING:
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getString(index));
 			break;
 			
-			case Cursor.FIELD_TYPE_INTEGER:
+			case BaseModel.FIELD_INTEGER:
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getInt(index));
 			break;
 			
-			case Cursor.FIELD_TYPE_BLOB:
+			case BaseModel.FIELD_LONG:
+				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getLong(index));
+			break;
+			
+			case BaseModel.FIELD_BLOB:
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getBlob(index));
 			break;
 			
-			case Cursor.FIELD_TYPE_FLOAT:
+			case BaseModel.FIELD_FLOAT:
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getFloat(index));
 			break;
 		}
