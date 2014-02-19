@@ -6,11 +6,7 @@ import java.util.HashMap;
 
 import com.app.sqlite.base.BaseModel;
 
-
-import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * A SQLite database helper class that handles the creation and updating of 
@@ -19,42 +15,10 @@ import android.database.sqlite.SQLiteOpenHelper;
  * be provided for the database update.
  * @author	memtrip
  */
-public class SQLDatabaseHelper extends SQLiteOpenHelper {
-	private static final String DATABASE_NAME = "database";
-	private static final int VERSION = 1;
-	
-	// Message
-	private static final String SQL_DROP_MESSAGE = "DROP TABLE IF EXISTS Message";
-	private static final String SQL_CREATE_MESSAGE = "create table Message (" +
-		"body text not null," +
-		"date text not null," +
-		"views int not null," +
-		"rating float not null," +
-		"profilePicture blob not null" +
-	");";
-	
+public class DatabaseHelper {
 	/**
-	 * Constructor
-	 * @param	context	
-	 */
-	public SQLDatabaseHelper(Context context) {
-		super(context, DATABASE_NAME, null, VERSION);
-	}
-
-	@Override
-	public void onCreate(SQLiteDatabase database) {
-		database.execSQL(SQL_CREATE_MESSAGE);
-	}
-
-	@Override
-	public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-		database.execSQL(SQL_DROP_MESSAGE);
-		onCreate(database);
-	}
-	
-	/**
-	 * A generic method that takes any class interface that extends BaseSQLModel, it takes the provided
-	 * cursor and populates a new instance of the provided BaseSQLModel interface with the results.
+	 * A generic method that takes any class interface that extends BaseModel, it takes the provided
+	 * cursor and populates a new instance of the provided BaseModel interface with the results.
 	 * @param	c	The class interface to return the cursor results in
 	 * @param	cursor	The provided SQLite cursor that the results should be populated from
 	 * @param	baseModel	An instance of a class that extends BaseSQLModel, 

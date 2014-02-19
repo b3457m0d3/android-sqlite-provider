@@ -1,12 +1,12 @@
 package com.app.sqlite;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 import com.app.sqlite.base.BaseModel;
 import com.app.sqlite.helper.ReflectionHelper;
-import com.app.sqlite.helper.SQLDatabaseHelper;
+import com.app.sqlite.helper.DatabaseHelper;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -16,31 +16,12 @@ import android.database.sqlite.SQLiteDatabase;
  * @author	memtrip
  */
 public class SQLProvider implements Closeable {
-	private SQLiteDatabase database;
-	private SQLDatabaseHelper sqlDatabaseHelper;
+	private SQLiteDatabase mDatabase;
 	
 	private static final String FIELD_TABLE_NAME = "TABLE_NAME";
 	
-	/**
-	 * Constructor
-	 * @param	context	baseContext()
-	 */
-	public SQLProvider(Context context) {
-		sqlDatabaseHelper = new SQLDatabaseHelper(context);
-	}
-	
-	/**
-	 * Create a new instance of the sqlite databsae
-	 */
-	public void open() {
-		database = sqlDatabaseHelper.getWritableDatabase();
-	}
-	
-	/**
-	 * Close the SQL provider
-	 */
-	public void close() {
-		sqlDatabaseHelper.close();
+	public SQLProvider(SQLiteDatabase database) {
+		mDatabase = database;
 	}
 	
 	/**
@@ -50,7 +31,7 @@ public class SQLProvider implements Closeable {
 	 */
 	public long insert(BaseModel baseModel) {
 		String tableName = ReflectionHelper.getStaticStringField(baseModel.getClass(), FIELD_TABLE_NAME);
-		return database.insertOrThrow(tableName, baseModel.getNullColumnHack(), baseModel.toContentValues());
+		return mDatabase.insertOrThrow(tableName, baseModel.getNullColumnHack(), baseModel.toContentValues());
 	}
 	
 	/**
@@ -85,7 +66,7 @@ public class SQLProvider implements Closeable {
 		String[] columns = baseModel.getModelColumns();
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
 		
-		Cursor cursor = database.query(tableName, 
+		Cursor cursor = mDatabase.query(tableName, 
 			columns, 
 			null, 
 			null, 
@@ -95,7 +76,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
+		T[] result = DatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
 	}
 	
@@ -113,7 +94,7 @@ public class SQLProvider implements Closeable {
 		String[] columns = baseModel.getModelColumns();
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
 		
-		Cursor cursor = database.query(tableName, 
+		Cursor cursor = mDatabase.query(tableName, 
 			columns, 
 			whereClause, 
 			conditions, 
@@ -123,7 +104,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = SQLDatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
+		T[] result = DatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
 	}
 	
@@ -134,7 +115,7 @@ public class SQLProvider implements Closeable {
 	 */
 	public <T> int count(Class<T> c) {
 		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
-		Cursor cursor = database.rawQuery("select count(*) from " + tableName, null);
+		Cursor cursor = mDatabase.rawQuery("select count(*) from " + tableName, null);
 		
 		// ensure there is at least one row and one column
 		cursor.moveToFirst();
@@ -157,5 +138,10 @@ public class SQLProvider implements Closeable {
 	 */
 	public void deleteByColumnKey() {
 		
+	}
+	
+	@Override
+	public void close() throws IOException {
+		mDatabase.close();
 	}
 }
