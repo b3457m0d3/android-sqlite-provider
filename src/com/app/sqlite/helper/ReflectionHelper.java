@@ -11,7 +11,6 @@ import java.util.HashMap;
  */
 public class ReflectionHelper {
 	private static final String METHOD_SET = "set";
-	private static final String EMPTY = "";
 	
 	/**
 	 * Create a new object instance based on the class provided
@@ -85,25 +84,11 @@ public class ReflectionHelper {
 			String methodName = declaredMethod.getName();
 			
 			if (methodName.startsWith(METHOD_SET)) {
-				setterMethods.put(removePrefixFromSetter(methodName),declaredMethod);
+				setterMethods.put(StringHelper.removePrefixFromSetter(methodName),declaredMethod);
 			}
 		}
 		
 		return setterMethods;
-	}
-	
-	/**
-	 * Removes the "set" from the setter method name and converts
-	 * the result into lower case
-	 * @param	setMethodName	The name of the setter method
-	 * @return	The setter method name with the "set" prefix removed
-	 */
-	private static String removePrefixFromSetter(String setMethodName) {
-		String methodName = setMethodName.replace(METHOD_SET, EMPTY);
-		String firstChar = methodName.substring(0,1);
-		methodName = methodName.substring(1, methodName.length());
-		methodName = firstChar.toLowerCase() + methodName;
-		return methodName;
 	}
 	
 	/**
@@ -165,5 +150,24 @@ public class ReflectionHelper {
 		} catch (IllegalAccessException e) {
 		} catch (InvocationTargetException e) {
 		}
+	}
+	
+	/**
+	 * invoke reflection method for a response
+	 * @param	object	The object to invoke the method on
+	 * @param	method	The method to invoke
+	 * @return	The response of the method
+	 */
+	public static <T> Object invokeMethod(Object object, Method method) {
+		Object responseObject = null;
+		
+		try {
+			responseObject = method.invoke(object);
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		} catch (InvocationTargetException e) {
+		}
+		
+		return responseObject;
 	}
 }
