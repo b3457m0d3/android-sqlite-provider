@@ -16,16 +16,6 @@ public abstract class BaseModel {
 	public static final int FIELD_BLOB = 4;
 	
 	/**
-	 * @return	the name of the SQL table this map will be saved to
-	 */
-	public abstract String getTableName();
-	
-	/**
-	 * @return	All the columns/types associated with the model
-	 */
-	public abstract HashMap<String,Integer> getModelColumnTypeMap();
-	
-	/**
 	 * @return	All the column names associated with the model
 	 */
 	public String[] getModelColumns() {
@@ -40,6 +30,11 @@ public abstract class BaseModel {
 	}
 	
 	/**
+	 * @return	All the columns/types associated with the model
+	 */
+	public abstract HashMap<String,Integer> getModelColumnTypeMap();
+	
+	/**
 	 * @return	the model converted into a ContentValues object ready to be inserted
 	 * into the SQLite database. 
 	 * 
@@ -47,12 +42,4 @@ public abstract class BaseModel {
 	 * RECEIVE A CONSTRAINT EXCEPTION.
 	 */
 	public abstract ContentValues toContentValues();
-	
-	/**
-	 * @return	SQLite cannot insert empty rows, a column that is safe to insert NULL into
-	 * must be provided. E.G:
-	 * INVALID: insert into user;
-	 * VALID: insert into user (username) VALUES (NULL);
-	 */
-	public abstract String getNullColumnHack();
 }
