@@ -3,15 +3,17 @@ package com.app.sqlite;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Method;
-
-import com.app.sqlite.base.BaseModel;
-import com.app.sqlite.helper.ReflectionHelper;
-import com.app.sqlite.helper.DatabaseHelper;
-import com.app.sqlite.helper.StringHelper;
+import java.util.ArrayList;
+import java.util.Map;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.app.sqlite.base.BaseModel;
+import com.app.sqlite.helper.DatabaseHelper;
+import com.app.sqlite.helper.ReflectionHelper;
+import com.app.sqlite.helper.StringHelper;
 
 /**
  * A wrapper class that encapsulates all SQLite behavior into a set
@@ -112,7 +114,7 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = DatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
+		T[] result = DatabaseHelper.retrieveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
 	}
 	
@@ -140,8 +142,21 @@ public class SQLProvider implements Closeable {
 			limit
 		);
 		
-		T[] result = DatabaseHelper.retreiveSQLSelectResults(c, cursor, baseModel);
+		T[] result = DatabaseHelper.retrieveSQLSelectResults(c, cursor, baseModel);
 		return (T[])result;
+	}
+	
+	/**
+	 * Selects a results map that matches the raw query provided. The map keys relate to 
+	 * the column names that are being selected
+	 * @param	query	The query to fetch the results for
+	 * @param	args	The arguments for the query
+	 * @param	modelsInQuery	The model objects used within the query
+	 * @return	A map of the row data values returned
+	 */
+	public ArrayList<Map<String,Object>> rawSelectQuery(String query, String[] args, Class<?>[] modelsInQuery) {
+		Cursor cursor = mDatabase.rawQuery(query, args);
+		return DatabaseHelper.retreiveSQLSelectResultMap(cursor,modelsInQuery);
 	}
 	
 	/**
