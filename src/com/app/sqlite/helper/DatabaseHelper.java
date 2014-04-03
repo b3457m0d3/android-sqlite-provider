@@ -100,8 +100,8 @@ public class DatabaseHelper {
 						resultMap.put(columnName, (T)cursor.getBlob(index));
 						break;
 					
-					case BaseModel.FIELD_FLOAT:
-						resultMap.put(columnName, (T)Float.valueOf(cursor.getFloat(index)));
+					case BaseModel.FIELD_DOUBLE:
+						resultMap.put(columnName, (T)Double.valueOf(cursor.getDouble(index)));
 						break;
 				}
 			}
@@ -145,8 +145,8 @@ public class DatabaseHelper {
 				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getBlob(index));
 			break;
 			
-			case BaseModel.FIELD_FLOAT:
-				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getFloat(index));
+			case BaseModel.FIELD_DOUBLE:
+				ReflectionHelper.invokeMethod(baseSQLModel, executeMethod, cursor.getDouble(index));
 			break;
 		}
 	}
