@@ -2,7 +2,6 @@ package com.app.sqlite;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.app.sqlite.base.BaseModel;
 import com.app.sqlite.helper.DatabaseHelper;
 import com.app.sqlite.helper.ReflectionHelper;
-import com.app.sqlite.helper.StringHelper;
 
 /**
  * A wrapper class that encapsulates all SQLite behavior into a set of generic methods
@@ -59,41 +57,18 @@ public class SQLProvider implements Closeable {
 	
 	/**
 	 * Updates the row associated with the provided baseModeland the whereClause provided
-	 * @param	baseModel	An instance of the baseSQLModel class that is being updated
+	 * @param	columnValuePairs	The column values to update
 	 * @param	whereClause	The condition of the update
 	 * @param 	whereArgs	The condition arguments
+	 * @param	classDef	The model that is being updated
 	 * @return	The amount of rows that have been updated
 	 */
-	public int update(BaseModel baseModel, String whereClause, String[] whereArgs) {
-		String tableName = ReflectionHelper.getStaticStringField(baseModel.getClass(), FIELD_TABLE_NAME);
-		
-		ContentValues contentValues = new ContentValues();
-		String[] modelColumns = baseModel.getModelColumns();
-		for (String column : modelColumns) {
-			Method executeMethod = ReflectionHelper.getMethod(baseModel.getClass(), StringHelper.buildGetterMethodNameFromVariableName(column));
-			Object object = ReflectionHelper.invokeMethod(baseModel, executeMethod);
-			
-			if (object instanceof String) {
-				String value = (String)object;
-				contentValues.put(column, value);
-			} else if (object instanceof Long) {
-				long value = ((Long)object).longValue();
-				contentValues.put(column, value);
-			} else if (object instanceof Integer) {
-				int value = ((Integer)object).intValue();
-				contentValues.put(column, value);
-			} else if (object instanceof Double) {
-				double value = ((Double)object).doubleValue();
-				contentValues.put(column, value);
-			} else if (object instanceof byte[]) {
-				byte[] value = (byte[])object;
-				contentValues.put(column, value);
-			}
-		}
+	public int update(ContentValues columnValuePairs, String whereClause, String[] whereArgs, Class<?> classDef) {
+		String tableName = ReflectionHelper.getStaticStringField(classDef, FIELD_TABLE_NAME);
 		
 		return mDatabase.update(
 			tableName, 
-			contentValues, 
+			columnValuePairs, 
 			whereClause, 
 			whereArgs
 		);
