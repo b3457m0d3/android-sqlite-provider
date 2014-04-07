@@ -2,30 +2,30 @@ package com.app.sqlite;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
 
-import android.content.Context;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.app.sqlite.async.AsyncParam;
-import com.app.sqlite.async.AsyncResponse;
-import com.app.sqlite.async.base.BaseAsyncTask;
-import com.app.sqlite.async.base.BaseAsyncTask.SQLAsyncCallback;
-import com.app.sqlite.async.base.BaseResponse;
-import com.app.sqlite.async.base.IParam;
 import com.app.sqlite.base.BaseModel;
+import com.app.sqlite.helper.DatabaseHelper;
+import com.app.sqlite.helper.ReflectionHelper;
+import com.app.sqlite.helper.StringHelper;
 
 /**
- * A wrapper class that encapsulates all SQLite behavior into a set
- * of generic methods
+ * A wrapper class that encapsulates all SQLite behavior into a set of generic methods
  * @author	memtrip
  */
 public class SQLProvider implements Closeable {
-	private SQLOperation mSQLOperation;
+	private SQLiteDatabase mDatabase;
+	
+	private static final String FIELD_TABLE_NAME = "TABLE_NAME";
 	
 	public SQLProvider(SQLiteDatabase database) {
-		mSQLOperation = new SQLOperation(database);
+		mDatabase = database;
 	}
 	
 	/**
@@ -33,20 +33,9 @@ public class SQLProvider implements Closeable {
 	 * @param	baseModel	The object being inserted into the SQLite table
 	 * @return	The unique id of the created row
 	 */
-	public long insert(BaseModel baseModel) { 
-		return mSQLOperation.insert(baseModel);
-	}
-	
-	/**
-	 * [ASYNC] Insert a baseSQLModel into the table that relates to the baseSQLModel type
-	 * @param	baseModel	The object being inserted into the SQLite table
-	 * @param	asyncCallback	Where the asynctask should send its result to
-	 * @param	context	The android application context
-	 */
-	public void insertAsync(BaseModel baseModel, SQLAsyncCallback asyncCallback, Context context) {
-		InsertAsync insertAsync = new InsertAsync(context);
-		insertAsync.setSQLAsyncCallback(asyncCallback);
-		insertAsync.execute(new AsyncParam().setBaseModelValue(baseModel));
+	public long insert(BaseModel baseModel) {
+		String tableName = ReflectionHelper.getStaticStringField(baseModel.getClass(), FIELD_TABLE_NAME);
+		return mDatabase.insertOrThrow(tableName, null, baseModel.toContentValues());
 	}
 	
 	/**
@@ -54,20 +43,18 @@ public class SQLProvider implements Closeable {
 	 * @param	baseModelArray	The array of objects being inserted into the SQLite table
 	 * @return	The unique ids of the created rows
 	 */
-	public long[] insertArray(BaseModel[] baseModelArray) { 
-		return mSQLOperation.insertArray(baseModelArray); 
-	}
-	
-	/**
-	 * [ASYNC] Insert an array of baseModel into the table that relates to the array database
-	 * @param	baseModelArray	The array of objects being inserted into the SQLite table
-	 * @param	asyncCallback	Where the asynctask should send its result to
-	 * @param	context	The android application context
-	 */
-	public void insertArrayAsync(BaseModel[] baseModelArray, SQLAsyncCallback asyncCallback, Context context) {
-		InsertArrayAsync insertArrayAsync = new InsertArrayAsync(context);
-		insertArrayAsync.setSQLAsyncCallback(asyncCallback);
-		insertArrayAsync.execute(new AsyncParam().setBaseModelArrayValue(baseModelArray));
+	public long[] insertArray(BaseModel[] baseModelArray) {
+		if (baseModelArray != null && baseModelArray.length > 0) {
+			long[] respnseIds = new long[baseModelArray.length];
+			
+			for (int i = 0; i < baseModelArray.length; i++) {
+				respnseIds[i] = this.insert(baseModelArray[i]);
+			}
+			
+			return respnseIds;
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -77,25 +64,38 @@ public class SQLProvider implements Closeable {
 	 * @param 	whereArgs	The condition arguments
 	 * @return	The amount of rows that have been updated
 	 */
-	public int update(BaseModel baseModel, String whereClause, String[] whereArgs) { 
-		return mSQLOperation.update(baseModel, whereClause, whereArgs);
-	}
-	
-	
-	/**
-	 * [ASYNC] Updates the row associated with the provided baseModeland the whereClause provided
-	 * @param	baseModel	An instance of the baseSQLModel class that is being updated
-	 * @param	whereClause	The condition of the update
-	 * @param 	whereArgs	The condition arguments
-	 * @param	asyncCallback	Where the asynctask should send its result to
-	 * @param	context	The android application context
-	 * @return	The amount of rows that have been updated
-	 */
-	public void update(BaseModel[] baseModelArray, String whereClause, String[] whereArgs, SQLAsyncCallback asyncCallback, Context context) {
-		UpdateAsync updateAsync = new UpdateAsync(context);
-		updateAsync.setSQLAsyncCallback(asyncCallback);
-		updateAsync.execute(
-			new AsyncParam().setBaseModelArrayValue(baseModelArray).setWhereClause(whereClause).setWhereArgs(whereArgs)
+	public int update(BaseModel baseModel, String whereClause, String[] whereArgs) {
+		String tableName = ReflectionHelper.getStaticStringField(baseModel.getClass(), FIELD_TABLE_NAME);
+		
+		ContentValues contentValues = new ContentValues();
+		String[] modelColumns = baseModel.getModelColumns();
+		for (String column : modelColumns) {
+			Method executeMethod = ReflectionHelper.getMethod(baseModel.getClass(), StringHelper.buildGetterMethodNameFromVariableName(column));
+			Object object = ReflectionHelper.invokeMethod(baseModel, executeMethod);
+			
+			if (object instanceof String) {
+				String value = (String)object;
+				contentValues.put(column, value);
+			} else if (object instanceof Long) {
+				long value = ((Long)object).longValue();
+				contentValues.put(column, value);
+			} else if (object instanceof Integer) {
+				int value = ((Integer)object).intValue();
+				contentValues.put(column, value);
+			} else if (object instanceof Double) {
+				double value = ((Double)object).doubleValue();
+				contentValues.put(column, value);
+			} else if (object instanceof byte[]) {
+				byte[] value = (byte[])object;
+				contentValues.put(column, value);
+			}
+		}
+		
+		return mDatabase.update(
+			tableName, 
+			contentValues, 
+			whereClause, 
+			whereArgs
 		);
 	}
 	
@@ -109,7 +109,21 @@ public class SQLProvider implements Closeable {
 	 * @return	An array of BaseSQLModel results
 	 */
 	public <T> T[] selectAll(Class<T> c, BaseModel baseModel, String order, String limit) {
-		return mSQLOperation.selectAll(c, baseModel, order, limit);
+		String[] columns = baseModel.getModelColumns();
+		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
+		
+		Cursor cursor = mDatabase.query(tableName, 
+			columns, 
+			null, 
+			null, 
+			null, 
+			null, 
+			order, 
+			limit
+		);
+		
+		T[] result = DatabaseHelper.retrieveSQLSelectResults(c, cursor, baseModel);
+		return (T[])result;
 	}
 	
 	/**
@@ -123,7 +137,21 @@ public class SQLProvider implements Closeable {
 	 * @return	An array of BaseSQLModel results
 	 */
 	public <T> T[] selectByWhereClause(Class<T> c, BaseModel baseModel, String whereClause, String[] conditions, String order, String limit) {
-		return mSQLOperation.selectByWhereClause(c, baseModel, whereClause, conditions, order, limit);
+		String[] columns = baseModel.getModelColumns();
+		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
+		
+		Cursor cursor = mDatabase.query(tableName, 
+			columns, 
+			whereClause, 
+			conditions, 
+			null, 
+			null, 
+			order, 
+			limit
+		);
+		
+		T[] result = DatabaseHelper.retrieveSQLSelectResults(c, cursor, baseModel);
+		return (T[])result;
 	}
 	
 	/**
@@ -135,7 +163,8 @@ public class SQLProvider implements Closeable {
 	 * @return	A map of the row data values returned
 	 */
 	public ArrayList<Map<String,Object>> rawSelectQuery(String query, String[] args, Class<?>[] modelsInQuery) {
-		return mSQLOperation.rawSelectQuery(query, args, modelsInQuery);
+		Cursor cursor = mDatabase.rawQuery(query, args);
+		return DatabaseHelper.retreiveSQLSelectResultMap(cursor,modelsInQuery);
 	}
 	
 	/**
@@ -144,7 +173,16 @@ public class SQLProvider implements Closeable {
 	 * @return	The number of rows in the table
 	 */
 	public int count(Class<?> c) {
-		return mSQLOperation.count(c);
+		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
+		Cursor cursor = mDatabase.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
+		
+		// ensure there is at least one row and one column
+		cursor.moveToFirst();
+		if (cursor.getCount() > 0 && cursor.getColumnCount() > 0) {
+			return cursor.getInt(0);
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -152,7 +190,8 @@ public class SQLProvider implements Closeable {
 	 * @param	c	The baseModel class that should be truncated
 	 */
 	public void truncate(Class<?> c) {
-		mSQLOperation.truncate(c);
+		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
+		mDatabase.rawQuery("DELETE FROM " + tableName, null);
 	}
 	
 	/**
@@ -163,73 +202,15 @@ public class SQLProvider implements Closeable {
 	 * @return
 	 */
 	public int deleteBy(Class<?> c, String column, String value) {
-		return mSQLOperation.deleteBy(c, column, value);
+		String tableName = ReflectionHelper.getStaticStringField(c, FIELD_TABLE_NAME);
+		return mDatabase.delete(
+			tableName, 
+			column + " = ?", 
+			new String[] {value}
+		);
 	}
-	
-	/**
-	 * Asynchronous version of insert(BaseModel baseModel) 
-	 */
-	private class InsertAsync extends BaseAsyncTask {
-
-		public InsertAsync(Context context) { super(context); }
-
-		@Override
-		protected BaseResponse run(IParam param) {
-			AsyncParam asyncParam = (AsyncParam)param;
-			AsyncResponse asyncResponse = new AsyncResponse();
-			
-			long rowId = mSQLOperation.insert(asyncParam.getBaseModelValue());
-			
-			asyncResponse.setIsValid(rowId != -1);
-			asyncResponse.setLongValue(rowId);
-			return asyncResponse;
-		}
-	}
-	
-	/**
-	 * Asynchronous version of insertArray(BaseModel[] baseModelArray) 
-	 */
-	private class InsertArrayAsync extends BaseAsyncTask {
-
-		public InsertArrayAsync(Context context) { super(context); }
-
-		@Override
-		protected BaseResponse run(IParam param) {
-			AsyncParam asyncParam = (AsyncParam)param;
-			AsyncResponse asyncResponse = new AsyncResponse();
-			
-			long[] rowIds = mSQLOperation.insertArray(asyncParam.getBaseModelArrayValue());
-			
-			asyncResponse.setIsValid(asyncParam.getBaseModelArrayValue().length == rowIds.length);
-			asyncResponse.setLongArrayValue(rowIds);
-			return asyncResponse;
-		}
-	}
-	
-	/**
-	 * Asynchronous version of update(BaseModel baseModel, String whereClause, String[] whereArgs)
-	 */
-	private class UpdateAsync extends BaseAsyncTask {
-
-		public UpdateAsync(Context context) { super(context); }
-
-		@Override
-		protected BaseResponse run(IParam param) {
-			AsyncParam asyncParam = (AsyncParam)param;
-			AsyncResponse asyncResponse = new AsyncResponse();
-			
-			mSQLOperation.update(
-				asyncParam.getBaseModelValue(), 
-				asyncParam.getWhereClause(), 
-				asyncParam.getWhereArgs()
-			);
-
-			return asyncResponse;
-		}
-	}
-
 	@Override
 	public void close() throws IOException {
-		mSQLOperation.getDatabase().close();
+		mDatabase.close();
 	}
 }
